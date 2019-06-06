@@ -7,7 +7,7 @@
 #include "Instruction.hpp"
 
 
-KStack<IOperand const *> STACK;
+std::stack<IOperand const *> STACK;
 std::queue<Instruction *> CODE_SECTION;
 
 void loader(std::vector<Instruction *> *list)

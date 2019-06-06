@@ -1,5 +1,0 @@
-Will not apply HSTS. The HSTS database must be a regular and non-world-writable file.
-ERROR: could not open HSTS store at '/home/kura/.wget-hsts'. HSTS will be disabled.
---2019-06-05 13:45:21--  https://update.code.visualstudio.com/commit:553cfb2c2205db5f15f3ee8395bbd5cf066d357d/server-linux-x64/insider
-Resolving update.code.visualstudio.com (update.code.visualstudio.com)... failed: Temporary failure in name resolution.
-wget: unable to resolve host address ‘update.code.visualstudio.com’

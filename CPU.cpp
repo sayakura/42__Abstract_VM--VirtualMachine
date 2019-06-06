@@ -4,8 +4,6 @@ extern KStack<IOperand const *> STACK;
 extern std::queue<Instruction *> CODE_SECTION;
 const IOperand *CPU::ALU(eMnemonic_type _mnemonic, const IOperand *a, const IOperand *b)
 {
-    const IOperand *ret;
-
     static std::vector<std::function<const IOperand *(const IOperand *,const IOperand *)>> cal = {
         [](const IOperand *a, const IOperand *b){ return *a + *b;},
         [](const IOperand *a, const IOperand *b){ return *a - *b;},
@@ -25,6 +23,7 @@ void        CPU::CU(void) {
     while (!CODE_SECTION.empty())
     {
         Instruction     *cInstruction = CODE_SECTION.front();
+        std::vector<std::string>        print_list;
         CODE_SECTION.pop();
         eMnemonic_type  cMnemonic = cInstruction->_mnemonic;
         eOperandType    cOperandType;
@@ -48,7 +47,7 @@ void        CPU::CU(void) {
                 else
                     throw std::runtime_error("Invalid Instruction");
                 STACK.pop();
-                rax = ALU(cMnemonic, rdi, rsi);
+                rax = ALU(cMnemonic, rsi, rdi);
                 STACK.push(rax);
                 break;
             case PUSH:
@@ -74,7 +73,13 @@ void        CPU::CU(void) {
                 break ;
             case DUMP:
                 for (auto i : STACK)
-                    std::cout << i->toString() << std::endl;
+                    print_list.push_back(i->toString());
+                for (auto it = print_list.rbegin(); it != print_list.rend(); ++it)
+                {   
+                    if ((*it).find('.') != std::string::npos)
+                        (*it).erase ((*it).find_last_not_of('0') + 1, std::string::npos );
+                    std::cout << *it << std::endl;
+                }
                 break ;
             case ASSERT:
                 cOperandType = cInstruction->_operand_type;
@@ -105,10 +110,11 @@ void        CPU::CU(void) {
                 if (rdi->getPrecision() == INT8)
                 {
                     char c = static_cast<int8_t>(rdi->getVal());
-                    std::cout << c << std::endl;
+                    std::cout << c;
                 }
                 else
                     std::runtime_error("Print error");
+
                 break ;
             case EXIT:
                 if (CODE_SECTION.size() != 0)

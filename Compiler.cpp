@@ -1,5 +1,7 @@
 #include "Compiler.hpp"
 
+bool stdinMode = false;
+
 Compiler::SyntaxError::SyntaxError(const char *message) : _message(message) {};
 
 const char * Compiler::SyntaxError::what () const throw () {
@@ -42,8 +44,6 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
 
     ++lineNum;
     str = trim(str);
-    if (str == ";;")
-        tokens->push_back(new Mnemonic(EXIT));
     if (str[0] == ';')
         return tokens;
     if (std::regex_match(str, intr_w_opr))
@@ -110,7 +110,6 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
     return tokens;
 }
 
-
 std::vector<Token *> *Compiler::tokenization(std::istream &in)
 {
     std::string         line;
@@ -120,6 +119,8 @@ std::vector<Token *> *Compiler::tokenization(std::istream &in)
     while (std::getline(in, line))
     {
         try {
+            if (line == ";;" && stdinMode)
+                break ;
             std::vector<Token *> *tokens = lexer(line);
             if (tokens->size() != 0)
                 tokens_all->insert(tokens_all->end(), tokens->begin(), tokens->end());

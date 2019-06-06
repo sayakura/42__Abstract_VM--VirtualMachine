@@ -10,6 +10,7 @@
 
 bool objectMode = false;
 bool loaderMode = false;
+extern bool stdinMode;
 
 void loader(std::vector<Instruction *> *list);
 
@@ -21,7 +22,8 @@ void    createObjectFile(std::vector<Instruction *> *in, std::string filename)
     for (auto line : *in)
     {
         char *ptr = reinterpret_cast<char *>(line);
-        write(fd, ptr, sizeof(Instruction));
+        ssize_t bwrite = write(fd, ptr, sizeof(Instruction));
+        (void)bwrite;
     }
     close(fd);
 }
@@ -45,7 +47,7 @@ std::vector<Instruction *> *parseObjectFile(const char *filename)
     }
     else
     {
-        std::cout << "Error with reading file " << filename << std::endl;
+        std::cout << "\x1b[31mError with reading file \x1b[0m" << filename << std::endl;
         ::exit(EXIT_FAILURE);
     }
     return _instr;
@@ -56,14 +58,21 @@ void    readFlags(int argc, char **argv)
     for (int i = 1; i < argc; i++)
     {
         if (std::strcmp(argv[i], "-c") == 0)
+        {
             objectMode = true;
+            if (argc == 2)
+            {
+                std::cout << "-c [filenname]" << std::endl;
+                ::exit(EXIT_SUCCESS);
+            }
+        }
         else if (std::strcmp(argv[i], "-l") == 0)
             loaderMode = true;
         else if (std::strcmp(argv[i], "-h") == 0)
         {
             std::cout << "NAME" << std::endl;
             std::cout << "\tAbstract_VM" << std::endl;
-            std::cout << "SYNOPSIS: -c -l filename/objectfile" << std::endl;
+            std::cout << "SYNOPSIS  -c -l filename/objectfile" << std::endl;
             std::cout << "OPTIONS" << std::endl;
             std::cout << "\t-c compiler object files" << std::endl;
             std::cout << "\t-l run the object file directly" << std::endl;
@@ -82,10 +91,10 @@ int     main(int argc, char **argv)
 
     if (argc < 2)
     {
+        stdinMode = true;
         in = &std::cin;
         ins = myCompiler.run(in, const_cast<char *>("Stdin"));
         loader(ins);
-        return (0);
     }
     else 
     {
@@ -94,7 +103,7 @@ int     main(int argc, char **argv)
         {
             if (argc < 3)
             {
-                std::cout << "-l [filenname]" << std::endl;
+                std::cout << "-l [filenname(object file)]" << std::endl;
                 ::exit(EXIT_SUCCESS);
             }
             ins = parseObjectFile(argv[argc - 1]);
@@ -113,6 +122,5 @@ int     main(int argc, char **argv)
         }
         loader(ins);
 	}
-  
     return (0);
 }
