@@ -3,28 +3,29 @@
 #define MNEMONIC_HPP
 #include "Token.hpp"
 
-typedef enum Mnemonic_type
+enum eMnemonic_type
 {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    PUSH,
+    ADD, // 0
+    SUB, // 1
+    MUL, // 2
+    DIV, // 3
+    PUSH, // 4
     POP,
     DUMP,
     ASSERT,
     MOD,
     PRINT,
     EXIT
-}            eMnemonic_type;
+};
 
 class Mnemonic: public Token
 {
-    int  m_type;
+    eMnemonic_type  m_type;
     Mnemonic(void);
     public:
-        Mnemonic(int);
-        int  getMnemonicType(void);
+        Mnemonic(eMnemonic_type);
+        eToken_type getTokenType(void);
+        eMnemonic_type  getMnemonicType(void);
 };
 
 #endif

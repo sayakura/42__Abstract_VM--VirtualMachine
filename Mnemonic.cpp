@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <string>
-Mnemonic::Mnemonic(int type) : Token(tMnemonic), m_type(type)  {
-};
+Mnemonic::Mnemonic(eMnemonic_type type) : m_type(type) {};
 
-int  Mnemonic::getMnemonicType(void) {
+eMnemonic_type  Mnemonic::getMnemonicType(void) {
     return m_type; }
+
+eToken_type     Mnemonic::getTokenType(void) {
+    std::cout << "m ";
+    return tMnemonic; }

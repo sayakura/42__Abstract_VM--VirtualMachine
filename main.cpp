@@ -3,6 +3,8 @@
 #include <fstream>
 #include "Compiler.hpp"
 
+void loader(std::vector<Instruction *> *list);
+
 int     main(int argc, char **argv)
 {
     std::ifstream inputFile;
@@ -16,6 +18,6 @@ int     main(int argc, char **argv)
         inputFile.open(argv[1], std::ifstream::in);
         in = &inputFile;
 	}
-    kc.reader(in, argv[1]);
+    loader(kc.run(in, argv[1]));
     return (0);
 }
