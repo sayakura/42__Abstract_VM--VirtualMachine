@@ -1,0 +1,33 @@
+push int8(1)
+push int8(2)
+add                 ; ----add 
+dump                ; 3
+pop
+push int8(1)
+push int8(2)
+sub                 ; ----sub
+dump                ; -1
+push int8(-1)
+mul                 ; ----mul
+dump                ; 1
+pop
+push int8(7)
+push int8(10)
+mod                 ; ----mod
+dump                ;3
+push int8(3)
+div                 ; ----div
+dump                ; 1
+push int8(97)
+print               ; print a
+push int8(98)
+print               ; print b
+assert int8(98)     ; assert 98
+assert int8(99)     ; assert 98
+exit
+;expected result
+;3
+;1
+;-1
+;3
+;1

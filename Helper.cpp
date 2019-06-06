@@ -19,12 +19,31 @@ void ErrorWithLineNumber(uint32_t lineNum, uint32_t rowNum, std::string &line, s
 {
     std::stringstream ss;
     auto len = line.size();
+    auto howmany = len - rowNum;
 
-    ss << filename << ":" << std::to_string(lineNum) << ":" << rowNum << ":" << reason << ": " << std::endl; 
+    ss << filename << ":" << std::to_string(lineNum) << ":" << rowNum << ": " << reason << ": " << std::endl; 
     ss << "\t" << line.insert(rowNum - 1, "\x1b[31m") << "\x1b[0m" << std::endl;
-    ss << "\t" << std::setfill(' ') << std::setw(rowNum) << "\x1b[31m^";
-    for (unsigned int i = 0; i < len - 1; i++)
+    ss << "\t";
+    for (unsigned int i = 0; i < rowNum - 1; i++)
+        ss << " ";
+    ss << "\x1b[31m^";
+    for (unsigned int i = 0; i < howmany; i++)
         ss << "~";
     ss << "\x1b[0m";
     throw std::runtime_error(ss.str());
+}
+
+std::string trim(const std::string &s)
+{
+	auto start = s.begin();
+	while (start != s.end() && std::isspace(*start)) {
+		start++;
+	}
+
+	auto end = s.end();
+	do {
+		end--;
+	} while (std::distance(start, end) > 0 && std::isspace(*end));
+
+	return std::string(start, end + 1);
 }

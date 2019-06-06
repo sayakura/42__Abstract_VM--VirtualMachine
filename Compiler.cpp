@@ -1,5 +1,11 @@
 #include "Compiler.hpp"
 
+Compiler::SyntaxError::SyntaxError(const char *message) : _message(message) {};
+
+const char * Compiler::SyntaxError::what () const throw () {
+    return _message;
+};
+
 std::vector<Token *> *Compiler::lexer(std::string &str)
 {
     std::vector<Token *> *tokens = new std::vector<Token*>();
@@ -21,11 +27,11 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
         { "print", PRINT },
         { "exit", EXIT }
     };
-    static std::regex rint8("int8\\(([-]?[0-9]+)\\)");
-    static std::regex rint16("int16\\(([-]?[0-9]+)\\)");
-    static std::regex rint32("int32\\(([-]?[0-9]+)\\)");
-    static std::regex rfloat("float\\(([-]?[0-9]+\\.[0-9]+)\\)");
-    static std::regex rdouble("double\\(([-]?[0-9]+\\.[0-9]+)\\)");
+    static std::regex rint8("int8\\(([-]?[0-9]+)\\)[ \\t]*(;.*)?");
+    static std::regex rint16("int16\\(([-]?[0-9]+)\\)[ \\t]*(;.*)?");
+    static std::regex rint32("int32\\(([-]?[0-9]+)\\)[ \\t]*(;.*)?");
+    static std::regex rfloat("float\\(([-]?[0-9]+\\.[0-9]+)\\)[ \\t]*(;.*)?");
+    static std::regex rdouble("double\\(([-]?[0-9]+\\.[0-9]+)\\)[ \\t]*(;.*)?");
     static std::vector<std::regex *> rgex_list = {
         &rint8,
         &rint16,
@@ -35,31 +41,49 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
     };
 
     ++lineNum;
+    str = trim(str);
+    if (str == ";;")
+        tokens->push_back(new Mnemonic(EXIT));
     if (str[0] == ';')
         return tokens;
     if (std::regex_match(str, intr_w_opr))
     {
+        bool found = false;
         std::vector<std::string> ret = split(str, "[ \\t]");
         tokens->push_back(new Mnemonic(mne_map[ret[0]]));
-        for (uint8_t i = 0; i < rgex_list.size(); i++)
-        {
-           if (std::regex_match(ret[1], *rgex_list[i]))
+        try
+        { 
+            for (uint8_t i = 0; i < rgex_list.size(); i++)
             {
-                std::string     oper;
-                eOperandType    type = static_cast<eOperandType>(i);
-                IOperand        *ptr;
-                Token           *t;
+                if (std::regex_match(ret[1], *rgex_list[i]))
+                {
+                    std::string     oper;
+                    eOperandType    type = static_cast<eOperandType>(i);
+                    IOperand        *ptr;
+                    Token           *t;
 
-                if (type == INT8)
-                    oper = ret[1].substr(5);
-                else if (type == DOUBLE)
-                    oper = ret[1].substr(7);
-                else
-                    oper = ret[1].substr(6);
-                ptr = const_cast<IOperand*>(_factory.createOperand(type, oper));
-                t = reinterpret_cast<Token *>(ptr);
-                tokens->push_back(t);
+                    found = true;
+                    if (type == INT8)
+                        oper = ret[1].substr(5);
+                    else if (type == DOUBLE)
+                        oper = ret[1].substr(7);
+                    else
+                        oper = ret[1].substr(6);
+                    ptr = const_cast<IOperand*>(_factory.createOperand(type, oper));
+                    t = reinterpret_cast<Token *>(ptr);
+                    tokens->push_back(t);
+                }
             }
+            if (!found)
+                throw Compiler::SyntaxError("Invalid grammer for the number representation");
+        }
+        catch(std::exception &e)
+        {
+            delete tokens;
+            std::string reason = e.what();
+            std::size_t found = ret[1].find("(");
+            std::size_t found1 = str.find(ret[1]);
+            ErrorWithLineNumber(lineNum, found1 + found + 2, str, _filename, reason);
         }
     }
     else if (std::regex_match(str, intr))
@@ -78,9 +102,9 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
         delete tokens;
         std::string reason;
         if (std::regex_match(str, push_assert))
-            reason = std::string(" \x1b[31merror\x1b[0m: Invalid use of mnemonic");
+            reason = std::string("\x1b[31merror\x1b[0m: Invalid use of mnemonic");
         else
-            reason = std::string(" \x1b[31merror\x1b[0m: Unknown mnemonic");
+            reason = std::string("\x1b[31merror\x1b[0m: Unknown mnemonic");
         ErrorWithLineNumber(lineNum, 1, str, _filename, reason);
     }
     return tokens;
@@ -135,14 +159,19 @@ std::vector<Instruction *> *Compiler::parser(std::vector<Token *> *tokens)
             {
                 case INT8:
                     _in->_register._int8 = static_cast<int8_t>(_op->getVal());
+                    break ;
                 case INT16:
                     _in->_register._int16 = static_cast<int16_t>(_op->getVal());
+                    break ;
                 case INT32:
                     _in->_register._int32 = static_cast<int32_t>(_op->getVal());
+                    break ;
                 case FLOAT:
                     _in->_register._float = static_cast<float>(_op->getVal());
+                    break ;
                 case DOUBLE:
                     _in->_register._double = static_cast<double>(_op->getVal());
+                    break ;
                 default:
                     ;
             };
@@ -157,14 +186,7 @@ std::vector<Instruction *> *Compiler::run(std::istream *in, char *filename)
     std::string line;
     _filename = std::string(filename);
 
-    try {
-        std::vector<Token *> *tokens = tokenization(*in);
-        std::vector<Instruction *> *instructions = parser(tokens);
-        return instructions; 
-    } catch(std::exception &e) {
-        std::cout << "[Compiler]" << std::endl;
-        std::cout << e.what() << std::endl;
-        ::exit(EXIT_FAILURE);
-    }
-    return nullptr;
+    std::vector<Token *> *tokens = tokenization(*in);
+    std::vector<Instruction *> *instructions = parser(tokens);
+    return instructions; 
 }

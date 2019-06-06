@@ -25,7 +25,7 @@ static std::vector<std::function<double(double, double)>> _cal = {
     [](double a, double b){ return a - b;},
     [](double a, double b){ return a * b;},
     [](double a, double b){ return a / b;},
-    [](double a, double b){ return std::fmod(a,b);}};
+    [](double a, double b){ return std::fmod(a, b);}};
 
 template <typename T>
 class Operand: public IOperand
@@ -38,8 +38,8 @@ class Operand: public IOperand
     public:
         Operand<T>(T val, eOperandType type): _val(val), _type(type), _str(std::to_string(val)){} ;
         ~Operand(void) {};
-        uint64_t getVal(void) const{
-            return static_cast<uint64_t>(_val);
+        double getVal(void) const{
+            return static_cast<double>(_val);
         }
         eToken_type getTokenType(void) {
             return tOperand; }
@@ -54,11 +54,14 @@ class Operand: public IOperand
             static Factory      _factory;
 
             ss >> num;
+            if (!num)
+            {
+                if (type == O_DIV)
+                    throw Operand::MathError("division by zero");
+                else if (type == O_MOD)
+                    throw Operand::MathError("modulo by zero");
+            }
             auto ret = _cal[type](_val, num);
-            if (type == O_DIV)
-                throw std::runtime_error("division by zero");
-            else if (type == O_MOD)
-                throw std::runtime_error("modulo by zero");
             return _factory.createOperand(prec, std::to_string(ret));
         }
         IOperand const * operator+( IOperand const & rhs ) const {
@@ -73,6 +76,14 @@ class Operand: public IOperand
             return oPerandFactory(rhs, O_MOD); }
         std::string const & toString( void ) const {
 		    return _str;}; 
+        class MathError : public std::exception
+        {
+            private:
+                const char *_message;
+            public:
+                MathError(const char *m) : _message(m) {} ;
+                const char * what () const throw () { return _message; };
+        };
 };
 
 #endif

@@ -2,44 +2,33 @@
 
 extern KStack<IOperand const *> STACK;
 extern std::queue<Instruction *> CODE_SECTION;
-// arithmetic logic unit 
-const IOperand *ALU(eMnemonic_type _mnemonic, const IOperand *a, const IOperand *b)
+const IOperand *CPU::ALU(eMnemonic_type _mnemonic, const IOperand *a, const IOperand *b)
 {
     const IOperand *ret;
-    static std::unordered_map< eMnemonic_type , std::function<const IOperand *(IOperand *,IOperand *)> > dispTable{
-    {ADD,[](IOperand *a, IOperand *b){ return *a + *b;} },
-    {SUB,[](IOperand *a, IOperand *b){ return *a - *b;} },
-    {MUL,[](IOperand *a, IOperand *b){ return *a * *b;} },
-    {MOD,[](IOperand *a, IOperand *b){ return *a % *b;} },
-    {DIV,[](IOperand *a, IOperand *b){ return *a / *b;} } };
 
-    return dispTable[_mnemonic](a, b);
+    static std::vector<std::function<const IOperand *(const IOperand *,const IOperand *)>> cal = {
+        [](const IOperand *a, const IOperand *b){ return *a + *b;},
+        [](const IOperand *a, const IOperand *b){ return *a - *b;},
+        [](const IOperand *a, const IOperand *b){ return *a * *b;},
+        [](const IOperand *a, const IOperand *b){ return *a / *b;},
+        [](const IOperand *a, const IOperand *b){ return *a % *b;}
+    };
+    return cal[_mnemonic](a, b);
 }
 
-// control unit 
 void        CPU::CU(void) {
     static Factory  _factory;
-    eMnemonic_type cMnemonic;
-    eOperandType cOperandType;
-    IOperand *a;
-    IOperand *b;
-    // if (STACK.size() < 2)
-    //     throw std::runtime_error("Not enough elements on the stack.");
-    // const IOperand *a = STACK.top();
-    // STACK.pop();
-    // const IOperand *b = STACK.top();
-    // STACK.pop();
-    
-    // while the code section is not empty
-
-    // get instruction from the code_section
-    std::cout << "CU is running :)" << std::endl;
-    std::cout << "instruction cnt :" << CODE_SECTION.size() << std::endl;
+    const IOperand *rax;
+    const IOperand *rdi;
+    const IOperand *rsi;
+   
     while (!CODE_SECTION.empty())
     {
-        Instruction *cInstruction = CODE_SECTION.front();
+        Instruction     *cInstruction = CODE_SECTION.front();
         CODE_SECTION.pop();
-        cMnemonic = cInstruction->_mnemonic;
+        eMnemonic_type  cMnemonic = cInstruction->_mnemonic;
+        eOperandType    cOperandType;
+    
         switch (cMnemonic)
         {
             case ADD:
@@ -48,13 +37,19 @@ void        CPU::CU(void) {
             case MOD:
             case MUL:
                 if (STACK.size() < 2)
-                    throw std::runtime_error("");
-                const IOperand *tmpA = STACK.top();
+                    throw std::runtime_error("Stack has less than 2 elements");
+                if (STACK.size())
+                    rdi = STACK.top();
+                else
+                    throw std::runtime_error("Invalid Instruction");
                 STACK.pop();
-                const IOperand *tmpB = STACK.top();
+                if (STACK.size())
+                    rsi = STACK.top();
+                else
+                    throw std::runtime_error("Invalid Instruction");
                 STACK.pop();
-                ALU(cMnemonic, tmpB, tmpA);
-    
+                rax = ALU(cMnemonic, rdi, rsi);
+                STACK.push(rax);
                 break;
             case PUSH:
                 cOperandType = cInstruction->_operand_type;
@@ -75,7 +70,7 @@ void        CPU::CU(void) {
                 if (!STACK.empty())
                     STACK.pop();
                 else
-                    std::runtime_error("Stack is empty");
+                    throw std::runtime_error("pop on empty stack");
                 break ;
             case DUMP:
                 for (auto i : STACK)
@@ -83,48 +78,57 @@ void        CPU::CU(void) {
                 break ;
             case ASSERT:
                 cOperandType = cInstruction->_operand_type;
-                const IOperand *tmpA = STACK.top();
-                const IOperand *tmpB;
-
-                if (cOperandType == INT8)
-                    tmpB = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int8));
-                else if (cOperandType == INT16)
-                    tmpB = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int16));
-                else if (cOperandType == INT32)
-                    tmpB = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int32));
-                else if (cOperandType == FLOAT)
-                    tmpB = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._float));
-                else if (cOperandType == DOUBLE)
-                    tmpB = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._double));
+                if (STACK.size())
+                    rdi = STACK.top();
                 else
-                    std::runtime_error("Wrong Operand type");
-                if (tmpA != tmpB)
-                    std::runtime_error("Assert failed");
+                    throw std::runtime_error("Invalid Instruction");
+                if (cOperandType == INT8)
+                    rsi = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int8));
+                else if (cOperandType == INT16)
+                    rsi = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int16));
+                else if (cOperandType == INT32)
+                    rsi = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._int32));
+                else if (cOperandType == FLOAT)
+                    rsi = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._float));
+                else if (cOperandType == DOUBLE)
+                    rsi = _factory.createOperand(cOperandType, std::to_string(cInstruction->_register._double));
+                else
+                    throw std::runtime_error("Wrong Operand type");
+                if (rdi->getVal() != rsi->getVal())
+                    throw std::runtime_error("Assert failed");
                 break ;
             case PRINT:
-                const IOperand *tmpA = STACK.top();
-                if (tmpA->getPrecision() == INT8)
+                 if (STACK.size())
+                    rdi = STACK.top();
+                else
+                    throw std::runtime_error("Invalid Instruction");
+                if (rdi->getPrecision() == INT8)
                 {
-                    char c = static_cast<int8_t>(tmpA->getVal());
+                    char c = static_cast<int8_t>(rdi->getVal());
                     std::cout << c << std::endl;
                 }
                 else
                     std::runtime_error("Print error");
                 break ;
             case EXIT:
-                if (STACK.size() != 1)
-                    std::runtime_error("Exit error");
+                if (CODE_SECTION.size() != 0)
+                    throw std::runtime_error("Exit error");
                 ::exit(0);
                 break ;
             default:
                 break ;
         }
-        STACK.pop();
     }
 }
 
-
 void        CPU::run(void)
 {
-    CU();
+    int8_t maxLine = CODE_SECTION.size();
+    if (CODE_SECTION.size() == 0)
+        std::cout << "\x1b[31mLine " <<  0 << " ERROR: " << "No Exit instruction" << "\x1b[0m" << std::endl;
+    try {
+        CU();
+    } catch(std::exception &e) {
+        std::cout << "\x1b[31mLine " <<  (maxLine - CODE_SECTION.size()) << " ERROR: " << e.what() << "\x1b[0m" << std::endl;
+    }
 }

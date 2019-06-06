@@ -30,6 +30,14 @@ public:
     std::vector<Token *>    *tokenization(std::istream &in);
     std::vector<Token *>    *lexer(std::string &str);
     std::vector<Instruction *> *parser(std::vector<Token *> *);
+    class SyntaxError : public std::exception
+    {
+        private:
+            const char *_message;
+        public:
+            SyntaxError(const char *);
+            const char * what () const throw ();
+    };
 };
 
 #endif

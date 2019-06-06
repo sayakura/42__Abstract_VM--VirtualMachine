@@ -12,16 +12,11 @@
 #include <unordered_map>
 
 class CPU {
-    private:
-        // general purpose registers
-        int64_t     _rdi;
-        int64_t     _rsi;
     public:
         // arithmetic logic unit 
-        int64_t     ALU(eMnemonic_type, IOperand*, IOperand*);
+        const IOperand *ALU(eMnemonic_type, const IOperand *, const IOperand *);
         // control unit 
         void        CU(void);
-
         void        run(void);
 };
 #endif

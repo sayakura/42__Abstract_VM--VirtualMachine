@@ -1,16 +1,20 @@
-add
+; -------------
+; exemple.avm -
+; -------------
 push int32(42)
 push int32(33)
 add
-terry is here
-push float(44.55) ;hello bro 
-push
-ncollie
-add
-mul
-push double(42.42213123312)
-push int32(42)
-dump
-pop
-assert double(42.42)
-exit
+ push float(44.55)
+
+ mul
+
+ push double(42.42)
+ push int32(42)
+
+ dump
+
+ pop
+
+ assert double(42.42)
+
+ exit

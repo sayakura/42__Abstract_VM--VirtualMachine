@@ -8,5 +8,4 @@ eMnemonic_type  Mnemonic::getMnemonicType(void) {
     return m_type; }
 
 eToken_type     Mnemonic::getTokenType(void) {
-    std::cout << "m ";
     return tMnemonic; }

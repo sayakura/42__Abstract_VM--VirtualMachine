@@ -1,0 +1,8 @@
+push int32(12332132)
+push int32(12332132)
+mul
+push int8(8)
+push int8(30)
+mul
+dump
+exit

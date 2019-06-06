@@ -9,11 +9,11 @@ enum eMnemonic_type
     SUB, // 1
     MUL, // 2
     DIV, // 3
-    PUSH, // 4
+    MOD, // 4
+    PUSH,
     POP,
     DUMP,
     ASSERT,
-    MOD,
     PRINT,
     EXIT
 };
