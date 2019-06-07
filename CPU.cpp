@@ -2,6 +2,7 @@
 
 extern KStack<IOperand const *> STACK;
 extern std::queue<Instruction *> CODE_SECTION;
+
 const IOperand *CPU::ALU(eMnemonic_type _mnemonic, const IOperand *a, const IOperand *b)
 {
     static std::vector<std::function<const IOperand *(const IOperand *,const IOperand *)>> cal = {
@@ -114,7 +115,7 @@ void        CPU::CU(void) {
                 }
                 else
                     std::runtime_error("Print error");
-
+                std::cout << std::endl;
                 break ;
             case EXIT:
                 if (CODE_SECTION.size() != 0)

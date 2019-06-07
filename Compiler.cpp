@@ -110,6 +110,7 @@ std::vector<Token *> *Compiler::lexer(std::string &str)
     return tokens;
 }
 
+
 std::vector<Token *> *Compiler::tokenization(std::istream &in)
 {
     std::string         line;
@@ -130,6 +131,8 @@ std::vector<Token *> *Compiler::tokenization(std::istream &in)
         }
     }
     std::cout << errors.str();
+    if (errors.str().size())
+        ::exit(EXIT_FAILURE);
     return tokens_all;
 }
 
