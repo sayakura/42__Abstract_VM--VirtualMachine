@@ -4,22 +4,22 @@ AbstractVM is a machine that uses a stack to compute simple arithmetic expressio
 ## Usage
 
 ```sh
-sudo ./Abstract_VM filename # run in "interpreter" mode
+./Abstract_VM filename # run in "interpreter" mode
 
-sudo ./Abstract_VM -c filename # compile it into object file 
+./Abstract_VM -c filename # compile it into object file 
 
-sudo ./Abstract_VM -l filename.o # run the object file
+./Abstract_VM -l filename.o # run the object file
 ```
 
 ## Screenshot
 
-##### run a normal file: 
+##### Run a normal file: 
 ![imagep](image/plop.png)
-##### compile asm into .o and then run .o:
+##### Compile asm into .o and then run .o:
 ![imagec](image/compiler.png)
-##### stdin mode:
+##### Stdin mode:
 ![images](image/standin.png)
-##### error messages:
+##### Error messages:
 ![imagei](image/invalid.png)
 ![imageo](image/overflow.png)
 ![imageot](image/overflowtest.png)
